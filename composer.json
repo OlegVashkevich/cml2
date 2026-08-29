@@ -1,0 +1,20 @@
+{
+    "name": "olegv/cml2",
+    "description": "Универсальный PHP-пакет для обмена данными по протоколу CommerceML 2 (выгрузка каталога 1С <-> сайт, обмен заказами)",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.0",
+        "ext-xmlreader": "*",
+        "ext-xmlwriter": "*",
+        "psr/log": "^1.1 || ^2.0 || ^3.0",
+        "ext-libxml": "*",
+        "ext-simplexml": "*",
+        "ext-dom": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "CommerceML2\\": "src/"
+        }
+    }
+}
