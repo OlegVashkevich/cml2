@@ -6,9 +6,6 @@ namespace CommerceML2\Parser;
 
 use CommerceML2\Exception\ExchangeException;
 use CommerceML2\Model\Offer;
-use DOMDocument;
-use SimpleXMLElement;
-use XMLReader;
 
 /**
  * Разбирает offers.xml (КоммерческаяИнформация/ПакетПредложений/Предложения/Предложение).
@@ -19,14 +16,14 @@ final class OffersParser
     /** @param callable(Offer):void $onOffer */
     public function parse(string $xmlContent, callable $onOffer): void
     {
-        $reader = new XMLReader();
+        $reader = new \XMLReader();
 
         if (!$reader->XML($xmlContent, null, LIBXML_NOWARNING | LIBXML_NOERROR)) {
             throw new ExchangeException('Cannot parse offers.xml: invalid XML');
         }
 
         while ($reader->read()) {
-            if ($reader->nodeType !== XMLReader::ELEMENT || $reader->name !== 'Предложение') {
+            if ($reader->nodeType !== \XMLReader::ELEMENT || $reader->name !== 'Предложение') {
                 continue;
             }
 
@@ -37,10 +34,10 @@ final class OffersParser
         $reader->close();
     }
 
-    private function expand(XMLReader $reader): SimpleXMLElement
+    private function expand(\XMLReader $reader): \SimpleXMLElement
     {
         $node = $reader->expand();
-        $dom = new DOMDocument();
+        $dom = new \DOMDocument();
         $imported = $dom->importNode($node, true);
         $dom->appendChild($imported);
 
@@ -52,7 +49,7 @@ final class OffersParser
         return $simple;
     }
 
-    private function parseOffer(SimpleXMLElement $node): Offer
+    private function parseOffer(\SimpleXMLElement $node): Offer
     {
         $id = (string) $node->Ид;
 

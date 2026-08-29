@@ -10,6 +10,11 @@ namespace CommerceML2\Contract;
  * соответствующий парсер (см. Parser\CatalogParser, Parser\OffersParser),
  * а сюда просто передаёт готовый filename+content — вы можете распарсить
  * их сами через готовые парсеры пакета внутри своей реализации.
+ *
+ * Для больших файлов (десятки/сотни тысяч товаров) не обязательно обрабатывать
+ * файл целиком за один вызов — верните ImportProgress::inProgress(), и 1С сама
+ * повторит запрос с тем же filename позже. См. Parser\CatalogParser::parse()
+ * с параметрами skipProducts/shouldPause для реализации возобновляемого разбора.
  */
 interface CatalogImportHandlerInterface
 {
@@ -17,5 +22,5 @@ interface CatalogImportHandlerInterface
      * @param string $relativePath например "import.xml" или "offers.xml"
      * @param string $xmlContent   сырой XML, как он был сохранён FileStorage
      */
-    public function import(string $relativePath, string $xmlContent): void;
+    public function import(string $relativePath, string $xmlContent): ImportProgress;
 }

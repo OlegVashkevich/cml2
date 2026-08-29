@@ -13,6 +13,11 @@ interface OrderExchangeHandlerInterface
     /** mode=success: 1С подтвердила получение orders.xml — можно пометить заказы как выгруженные. */
     public function confirmDelivered(): void;
 
-    /** mode=import (type=sale): 1С прислала orders.xml обратно — обычно это статусы заказов. */
-    public function importIncoming(string $xmlContent): void;
+    /**
+     * mode=import (type=sale): 1С прислала orders.xml обратно — обычно это статусы заказов.
+     * orders.xml обычно на порядки меньше import.xml, так что почти всегда можно
+     * сразу вернуть ImportProgress::done() — но интерфейс симметричен с каталогом
+     * на случай, если у вас тоже тысячи заказов за раз.
+     */
+    public function importIncoming(string $xmlContent): ImportProgress;
 }

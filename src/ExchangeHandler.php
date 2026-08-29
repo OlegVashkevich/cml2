@@ -12,7 +12,6 @@ use CommerceML2\Exception\ExchangeException;
 use CommerceML2\Storage\FileStorageInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Throwable;
 
 /**
  * Реализует серверную часть протокола CommerceML 2 ("Обмен данными с сайтом" со стороны 1С).
@@ -80,7 +79,7 @@ final class ExchangeHandler
         } catch (ExchangeException $e) {
             $this->logger->error('CommerceML2 exchange error: ' . $e->getMessage());
             return Response::plain('failure ' . $e->getMessage(), 500);
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('CommerceML2 unexpected error: ' . $e->getMessage(), ['exception' => $e]);
             return Response::plain('failure Internal error', 500);
         }
@@ -99,7 +98,7 @@ final class ExchangeHandler
         // success
         // <имя cookie/переменной сессии>
         // <значение>
-        $body = "success\n$session->name\n$session->value";
+        $body = "success\n{$session->name}\n{$session->value}";
 
         $response = Response::plain($body, 200);
 
@@ -116,7 +115,7 @@ final class ExchangeHandler
         // если ваш сервер умеет распаковывать на лету — тут для простоты выключено).
         $body = "zip=no\nfile_limit=" . $this->fileLimitBytes;
 
-        $this->logger->info("CommerceML2 init: type=$type");
+        $this->logger->info("CommerceML2 init: type={$type}");
 
         return Response::plain($body);
     }
@@ -135,7 +134,7 @@ final class ExchangeHandler
 
         $this->storage->put($type, $safePath, $rawBody);
 
-        $this->logger->info("CommerceML2 file saved: $safePath (" . strlen($rawBody) . ' bytes)');
+        $this->logger->info("CommerceML2 file saved: {$safePath} (" . strlen($rawBody) . ' bytes)');
 
         return Response::plain('success');
     }
@@ -148,21 +147,32 @@ final class ExchangeHandler
         $content = $this->storage->get($type, $safePath);
 
         if ($content === null) {
-            throw new ExchangeException("File not found for import: $safePath");
+            throw new ExchangeException("File not found for import: {$safePath}");
         }
 
         if ($type === 'catalog') {
             // import.xml — классификатор + товары; offers.xml — торговые предложения (цены/остатки)
-            $this->catalogHandler->import($safePath, $content);
+            $progress = $this->catalogHandler->import($safePath, $content);
         } else {
             // type === 'sale': сюда прилетает orders.xml от 1С со статусами существующих заказов
-            $this->orderHandler->importIncoming($content);
+            $progress = $this->orderHandler->importIncoming($content);
         }
 
-        $this->logger->info("CommerceML2 import done: $safePath");
+        if (!$progress->done) {
+            // 1С прочитает "progress" и повторит тот же запрос mode=import&filename=...
+            // через паузу (по умолчанию несколько секунд) — так и должно быть для больших файлов.
+            $this->logger->info("CommerceML2 import in progress: {$safePath}" . ($progress->note !== null ? " ({$progress->note})" : ''));
 
-        // Если импорт большого каталога занимает много времени, можно вернуть
-        // "progress\n<текст>" — 1С повторит запрос import с тем же filename позже.
+            $body = 'progress';
+            if ($progress->note !== null) {
+                $body .= "\n" . $progress->note;
+            }
+
+            return Response::plain($body);
+        }
+
+        $this->logger->info("CommerceML2 import done: {$safePath}");
+
         return Response::plain('success');
     }
 

@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace CommerceML2\Xml;
 
 use CommerceML2\Model\Order;
-use DateTimeImmutable;
-use DateTimeInterface;
-use XMLWriter;
 
 /**
  * Формирует orders.xml (КоммерческаяИнформация/Документ...) для ответа на mode=query,
@@ -16,11 +13,11 @@ use XMLWriter;
 final class OrdersXmlWriter
 {
     /** @param Order[] $orders */
-    public function write(array $orders, ?DateTimeInterface $date = null): string
+    public function write(array $orders, ?\DateTimeInterface $date = null): string
     {
-        $date ??= new DateTimeImmutable();
+        $date ??= new \DateTimeImmutable();
 
-        $writer = new XMLWriter();
+        $writer = new \XMLWriter();
         $writer->openMemory();
         $writer->setIndent(true);
         $writer->startDocument('1.0', 'UTF-8');
@@ -39,7 +36,7 @@ final class OrdersXmlWriter
         return $writer->outputMemory();
     }
 
-    private function writeOrder(XMLWriter $writer, Order $order): void
+    private function writeOrder(\XMLWriter $writer, Order $order): void
     {
         $writer->startElement('Документ');
         $writer->writeElement('Ид', $order->id);

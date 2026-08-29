@@ -7,10 +7,6 @@ namespace CommerceML2\Parser;
 use CommerceML2\Exception\ExchangeException;
 use CommerceML2\Model\Order;
 use CommerceML2\Model\OrderItem;
-use DateTimeImmutable;
-use DOMDocument;
-use SimpleXMLElement;
-use XMLReader;
 
 /**
  * Разбирает orders.xml, присланный 1С (обычно — обновлённые статусы ранее выгруженных заказов,
@@ -21,19 +17,19 @@ final class OrdersParser
     /** @param callable(Order):void $onOrder */
     public function parse(string $xmlContent, callable $onOrder): void
     {
-        $reader = new XMLReader();
+        $reader = new \XMLReader();
 
         if (!$reader->XML($xmlContent, null, LIBXML_NOWARNING | LIBXML_NOERROR)) {
             throw new ExchangeException('Cannot parse orders.xml: invalid XML');
         }
 
         while ($reader->read()) {
-            if ($reader->nodeType !== XMLReader::ELEMENT || $reader->name !== 'Документ') {
+            if ($reader->nodeType !== \XMLReader::ELEMENT || $reader->name !== 'Документ') {
                 continue;
             }
 
             $node = $reader->expand();
-            $dom = new DOMDocument();
+            $dom = new \DOMDocument();
             $imported = $dom->importNode($node, true);
             $dom->appendChild($imported);
             $simple = simplexml_import_dom($imported);
@@ -48,14 +44,14 @@ final class OrdersParser
         $reader->close();
     }
 
-    private function parseOrder(SimpleXMLElement $node): Order
+    private function parseOrder(\SimpleXMLElement $node): Order
     {
         $id = (string) $node->Ид;
         $dateRaw = (string) $node->Дата;
         $timeRaw = (string) ($node->Время ?? '00:00:00');
 
-        $date = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $dateRaw . ' ' . $timeRaw)
-            ?: new DateTimeImmutable();
+        $date = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $dateRaw . ' ' . $timeRaw)
+            ?: new \DateTimeImmutable();
 
         $status = null;
         if (isset($node->ХодСтатуса) || isset($node->Статус)) {

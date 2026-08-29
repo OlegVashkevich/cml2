@@ -19,13 +19,13 @@ final class LocalFileStorage implements FileStorageInterface
         $dir = dirname($fullPath);
 
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-            throw new ExchangeException("Cannot create directory: $dir");
+            throw new ExchangeException("Cannot create directory: {$dir}");
         }
 
         // 1С может присылать файл несколькими POST-запросами частями (докачка) —
         // но чаще всего по сумме это один PUT/POST на файл, поэтому просто перезаписываем.
         if (file_put_contents($fullPath, $content) === false) {
-            throw new ExchangeException("Cannot write file: $fullPath");
+            throw new ExchangeException("Cannot write file: {$fullPath}");
         }
     }
 

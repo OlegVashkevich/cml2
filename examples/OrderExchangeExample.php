@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use CommerceML2\Contract\ImportProgress;
 use CommerceML2\Contract\OrderExchangeHandlerInterface;
 use CommerceML2\Model\Order;
 use CommerceML2\Parser\OrdersParser;
@@ -23,11 +24,15 @@ final class OrderExchangeExample implements OrderExchangeHandlerInterface
         // (проще всего запомнить их id между вызовами query и success в сессии/кеше)
     }
 
-    public function importIncoming(string $xmlContent): void
+    public function importIncoming(string $xmlContent): ImportProgress
     {
+        // orders.xml от 1С обычно небольшой (статусы существующих заказов),
+        // поэтому обрабатываем целиком за один вызов без чанкования.
         (new OrdersParser())->parse($xmlContent, function (Order $order): void {
             // TODO: обновить статус заказа в вашей БД по $order->id / $order->status
         });
+
+        return ImportProgress::done();
     }
 
     /** @return Order[] */
